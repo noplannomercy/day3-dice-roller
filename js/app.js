@@ -24,6 +24,7 @@ const App = {
     init() {
         this.bindEvents();
         this.updateSelectionDisplay();
+        this.loadAndDisplayHistory();
         console.log('🎲 Dice Roller initialized. Run DiceTests.runAll() to test.');
     },
 
@@ -44,6 +45,14 @@ const App = {
 
         // Coin flip button
         document.getElementById('flip-coin-btn').addEventListener('click', () => this.handleCoinFlip());
+
+        // Clear history button
+        document.getElementById('clear-history').addEventListener('click', () => this.handleClearHistory());
+
+        // Quick presets
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.handlePreset(e));
+        });
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => this.handleKeyboard(e));
@@ -127,9 +136,18 @@ const App = {
         // Roll all dice
         const results = Dice.rollAll(this.diceConfig);
         const total = Dice.calculateTotal(results);
+        const diceString = Dice.formatSelection(this.diceConfig);
 
         // Display results with animation
         await this.displayResultsAnimated(results, total);
+
+        // Save to history
+        Storage.saveRoll({
+            dice: diceString,
+            results: results,
+            total: total
+        });
+        this.loadAndDisplayHistory();
 
         // Re-enable button
         this.isRolling = false;
@@ -240,6 +258,107 @@ const App = {
             e.preventDefault();
             this.clearAll();
         }
+    },
+
+    /**
+     * Load and display history from storage
+     */
+    loadAndDisplayHistory() {
+        const historyList = document.getElementById('history-list');
+        const history = Storage.loadHistory();
+
+        if (history.length === 0) {
+            historyList.innerHTML = '<p class="text-gray-400 italic">No rolls yet</p>';
+            return;
+        }
+
+        historyList.innerHTML = '';
+
+        for (const entry of history) {
+            const item = document.createElement('div');
+            item.className = 'flex items-center justify-between p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100 transition-colors';
+            item.dataset.results = JSON.stringify(entry.results);
+
+            const info = document.createElement('span');
+            info.className = 'text-gray-700';
+            info.textContent = `${entry.dice} = ${entry.total}`;
+
+            const time = document.createElement('span');
+            time.className = 'text-gray-400 text-xs';
+            time.textContent = Storage.formatRelativeTime(entry.timestamp);
+
+            item.appendChild(info);
+            item.appendChild(time);
+
+            // Click to re-roll
+            item.addEventListener('click', () => this.rerollFromHistory(entry.results));
+
+            historyList.appendChild(item);
+        }
+    },
+
+    /**
+     * Re-roll from history entry
+     */
+    async rerollFromHistory(results) {
+        if (this.isRolling) return;
+
+        // Reconstruct diceConfig from results
+        this.clearAll();
+        for (const [diceType, rolls] of Object.entries(results)) {
+            this.diceConfig[diceType] = rolls.length;
+            this.updateCountDisplay(diceType);
+        }
+        this.updateSelectionDisplay();
+
+        // Trigger roll
+        await this.handleRoll();
+    },
+
+    /**
+     * Clear history
+     */
+    handleClearHistory() {
+        Storage.clearHistory();
+        this.loadAndDisplayHistory();
+    },
+
+    /**
+     * Handle quick preset click
+     */
+    async handlePreset(e) {
+        if (this.isRolling) return;
+
+        const preset = e.currentTarget.dataset.preset;
+
+        // Clear current selection
+        this.clearAll();
+
+        // Parse preset and set dice
+        switch (preset) {
+            case '1d20':
+                this.diceConfig.d20 = 1;
+                break;
+            case '2d6':
+                this.diceConfig.d6 = 2;
+                break;
+            case '4d6kh3':
+                // 4d6 keep highest 3 (drop lowest)
+                this.diceConfig.d6 = 4;
+                break;
+            case '1d100':
+                this.diceConfig.d100 = 1;
+                break;
+        }
+
+        // Update UI
+        for (const diceType of Object.keys(this.diceConfig)) {
+            this.updateCountDisplay(diceType);
+        }
+        this.updateSelectionDisplay();
+
+        // Auto roll
+        await this.handleRoll();
     }
 };
 

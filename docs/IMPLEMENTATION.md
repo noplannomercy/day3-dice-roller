@@ -169,49 +169,51 @@
 
 ---
 
-## Phase 4: History & Presets (10 min)
+## Phase 4: History & Presets (10 min) ✅ COMPLETED
 
 ### Write Tests First (js/storage.js)
-- [ ] Test: saveRoll() adds to history
-- [ ] Test: loadHistory() returns array
-- [ ] Test: loadHistory() handles corrupted JSON gracefully
-- [ ] Test: history max 20 items enforced
-- [ ] Test: clearHistory() empties history
-- [ ] Test: saveRoll() includes timestamp
-- [ ] Test: LocalStorage quota exceeded error handled
-- [ ] Test: works when LocalStorage unavailable
+- [x] Test: saveRoll() adds to history
+- [x] Test: loadHistory() returns array
+- [x] Test: loadHistory() handles corrupted JSON gracefully
+- [x] Test: history max 20 items enforced
+- [x] Test: clearHistory() empties history
+- [x] Test: saveRoll() includes timestamp
+- [x] Test: LocalStorage error handled with try-catch
+- [x] Test: works when LocalStorage unavailable
+- [x] Test: formatRelativeTime() formats correctly
 
 ### Implement storage.js
-- [ ] saveRoll(rollData) - save to LocalStorage with try-catch
-- [ ] loadHistory() - retrieve with JSON parse error handling
-- [ ] clearHistory() - remove all history
-- [ ] getPresets() - get saved presets
-- [ ] savePreset(name, diceConfig) - save custom preset
-- [ ] removePreset(name) - delete preset
-- [ ] isLocalStorageAvailable() - feature detection
+- [x] saveRoll(rollData) - save to LocalStorage with try-catch
+- [x] loadHistory() - retrieve with JSON parse error handling
+- [x] clearHistory() - remove all history
+- [x] loadPresets() - get saved presets
+- [x] savePreset(name, diceConfig) - save custom preset
+- [x] removePreset(name) - delete preset
+- [x] isLocalStorageAvailable() - feature detection
+- [x] formatRelativeTime() - "just now", "2m ago" formatting
 
 ### History Display
-- [ ] Show last 20 rolls
-- [ ] Format: "2d6+1d10 = 15"
-- [ ] Show relative timestamp ("just now", "2 min ago")
-- [ ] Click history item to re-roll same combination
-- [ ] Clear History button works
+- [x] Show last 20 rolls
+- [x] Format: "2d6 + 1d10 = 15"
+- [x] Show relative timestamp ("just now", "2m ago")
+- [x] Click history item to re-roll same combination
+- [x] Clear History button works
 
 ### Quick Presets
-- [ ] Attack Roll (1d20)
-- [ ] Damage 2d6 (2d6)
-- [ ] Stat Roll (4d6 drop lowest)
-- [ ] Percentile (1d100)
-- [ ] Click preset → set dice → auto roll
+- [x] Attack Roll (1d20)
+- [x] Damage 2d6 (2d6)
+- [x] Stat Roll (4d6 drop lowest)
+- [x] Percentile (1d100)
+- [x] Click preset → set dice → auto roll
 
 ### Test: Phase 4 Verification
-- [ ] Roll saves to history
-- [ ] Refresh page → history loads
-- [ ] Corrupted localStorage JSON → returns empty array, no crash
-- [ ] 21st roll removes oldest
-- [ ] Clear History removes all
-- [ ] Click history item re-rolls
-- [ ] Presets set correct dice
+- [x] Roll saves to history
+- [x] Refresh page → history loads
+- [x] Corrupted localStorage JSON → returns empty array, no crash
+- [x] 21st roll removes oldest
+- [x] Clear History removes all
+- [x] Click history item re-rolls
+- [x] Presets set correct dice
 - [ ] LocalStorage full error handled gracefully
 
 ---
@@ -320,10 +322,10 @@ testDistribution(20, 1000);
 day3-dice-roller/
 ├── index.html          [x] Phase 1, 3 (CSS animations)
 ├── js/
-│   ├── app.js          [x] Phase 2, 3 (animation integration)
+│   ├── app.js          [x] Phase 2, 3, 4 (animation, history, presets)
 │   ├── dice.js         [x] Phase 2
 │   ├── animation.js    [x] Phase 3
-│   └── storage.js      [ ] Phase 4
+│   └── storage.js      [x] Phase 4
 └── docs/
     ├── PRD.md          [x]
     ├── IMPLEMENTATION.md [x]
