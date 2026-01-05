@@ -108,7 +108,7 @@ const App = {
     /**
      * Handle roll button click
      */
-    handleRoll() {
+    async handleRoll() {
         if (this.isRolling) return;
 
         if (!this.hasDiceSelected()) {
@@ -121,25 +121,26 @@ const App = {
         rollBtn.disabled = true;
         rollBtn.textContent = 'Rolling...';
 
+        // Shake animation on button
+        await Animation.shakeButton(rollBtn);
+
         // Roll all dice
         const results = Dice.rollAll(this.diceConfig);
         const total = Dice.calculateTotal(results);
 
-        // Display results (animation will be added in Phase 3)
-        this.displayResults(results, total);
+        // Display results with animation
+        await this.displayResultsAnimated(results, total);
 
         // Re-enable button
-        setTimeout(() => {
-            this.isRolling = false;
-            rollBtn.disabled = false;
-            rollBtn.textContent = 'Roll Dice';
-        }, 300);
+        this.isRolling = false;
+        rollBtn.disabled = false;
+        rollBtn.textContent = 'Roll Dice';
     },
 
     /**
-     * Display roll results
+     * Display roll results with animations
      */
-    displayResults(results, total) {
+    async displayResultsAnimated(results, total) {
         const resultsSection = document.getElementById('results');
         const resultsList = document.getElementById('results-list');
         const totalEl = document.getElementById('total');
@@ -149,6 +150,11 @@ const App = {
 
         // Clear previous results
         resultsList.innerHTML = '';
+        totalEl.textContent = '...';
+
+        // Collect all animations
+        const allAnimations = [];
+        let globalDelay = 0;
 
         // Add each dice type's results
         for (const [diceType, rolls] of Object.entries(results)) {
@@ -160,30 +166,30 @@ const App = {
             label.textContent = `${diceType}:`;
             row.appendChild(label);
 
-            // Add individual dice results
+            // Add individual dice results with animation
+            const diceElements = [];
             for (const value of rolls) {
-                const die = document.createElement('span');
-                die.className = 'inline-flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg font-bold text-lg';
-
-                // Check for critical hits/fails on d20
-                if (diceType === 'd20') {
-                    if (value === 20) {
-                        die.classList.remove('bg-gray-100');
-                        die.classList.add('bg-yellow-400', 'text-yellow-900');
-                    } else if (value === 1) {
-                        die.classList.remove('bg-gray-100');
-                        die.classList.add('bg-red-500', 'text-white');
-                    }
-                }
-
-                die.textContent = value;
+                const die = Animation.createDiceElement(value, diceType);
                 row.appendChild(die);
+                diceElements.push({ element: die, value, diceType });
             }
 
             resultsList.appendChild(row);
+
+            // Schedule animations with stagger
+            for (const { element, value, diceType: dt } of diceElements) {
+                allAnimations.push(
+                    Animation.animateDieResult(element, value, dt, globalDelay)
+                );
+                globalDelay += Animation.STAGGER_DELAY;
+            }
         }
 
-        // Update total
+        // Wait for all animations to complete
+        await Promise.all(allAnimations);
+
+        // Animate total
+        totalEl.classList.add('animate-bounce-in');
         totalEl.textContent = total;
     },
 
@@ -202,15 +208,19 @@ const App = {
     /**
      * Handle coin flip
      */
-    handleCoinFlip() {
+    async handleCoinFlip() {
         const result = Math.random() < 0.5 ? 'Heads' : 'Tails';
         const coinResultEl = document.getElementById('coin-result');
 
-        // Simple animation
-        coinResultEl.textContent = '...';
+        // Animate coin flip
+        await Animation.animateCoinFlip(coinResultEl);
+        coinResultEl.textContent = result;
+        coinResultEl.classList.add('animate-bounce-in');
+
+        // Remove animation class after completion
         setTimeout(() => {
-            coinResultEl.textContent = result;
-        }, 200);
+            coinResultEl.classList.remove('animate-bounce-in');
+        }, 400);
     },
 
     /**
