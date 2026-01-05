@@ -218,40 +218,40 @@
 
 ---
 
-## Phase 5: Advanced Features (8 min)
+## Phase 5: Advanced Features (8 min) ✅ COMPLETED
 
 ### Coin Flip
-- [ ] Flip Coin button
-- [ ] 50/50 random (Heads/Tails)
-- [ ] Flip animation
-- [ ] Result display with icon
-- [ ] Saves to history
+- [x] Flip Coin button
+- [x] 50/50 random (Heads/Tails)
+- [x] Flip animation
+- [x] Result display with icon
+- [x] Saves to history
 
 ### Advantage/Disadvantage (d20)
-- [ ] Advantage button: roll 2d20, show both, highlight higher
-- [ ] Disadvantage button: roll 2d20, show both, highlight lower
-- [ ] Clear visual indication of which is used
+- [x] Advantage button: roll 2d20, show both, highlight higher
+- [x] Disadvantage button: roll 2d20, show both, highlight lower
+- [x] Clear visual indication of which is used (opacity-40 on unused)
 
 ### Modifiers
-- [ ] Modifier input (+/- number)
-- [ ] Apply to total
-- [ ] Display: "2d6+3 = 10 (7+3)"
+- [x] Modifier input (+/- number)
+- [x] Apply to total
+- [x] Display: "2d6+3 = 10 (7+3)"
 
 ### Keyboard Shortcuts
-- [ ] Space = Roll dice
-- [ ] Enter = Roll dice
-- [ ] Escape = Clear dice selection
-- [ ] Prevent multiple rapid triggers (debounce)
-- [ ] Ignore key repeat events
+- [x] Space = Roll dice
+- [x] Enter = Roll dice
+- [x] Escape = Clear dice selection
+- [x] Prevent multiple rapid triggers (isRolling flag)
+- [x] Ignore key repeat events (event.repeat check)
 
 ### Test: Phase 5 Verification
-- [ ] Coin flip is 50/50 (100 flips, within ±10%)
-- [ ] Advantage shows both d20, takes higher
-- [ ] Disadvantage shows both d20, takes lower
-- [ ] Modifier adds/subtracts correctly
-- [ ] Space triggers roll
-- [ ] Keyboard works on focused elements
-- [ ] No duplicate rolls from key repeat (event.repeat check)
+- [x] Coin flip is 50/50 (100 flips, within ±10%)
+- [x] Advantage shows both d20, takes higher
+- [x] Disadvantage shows both d20, takes lower
+- [x] Modifier adds/subtracts correctly
+- [x] Space triggers roll
+- [x] Keyboard works on focused elements
+- [x] No duplicate rolls from key repeat (event.repeat check)
 
 ---
 

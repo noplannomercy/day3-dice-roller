@@ -43,8 +43,16 @@ const App = {
         // Clear all button
         document.getElementById('clear-all').addEventListener('click', () => this.clearAll());
 
+        // Modifier buttons
+        document.getElementById('mod-increase').addEventListener('click', () => this.adjustModifier(1));
+        document.getElementById('mod-decrease').addEventListener('click', () => this.adjustModifier(-1));
+
         // Coin flip button
         document.getElementById('flip-coin-btn').addEventListener('click', () => this.handleCoinFlip());
+
+        // Advantage/Disadvantage buttons
+        document.getElementById('advantage-btn').addEventListener('click', () => this.handleAdvantage());
+        document.getElementById('disadvantage-btn').addEventListener('click', () => this.handleDisadvantage());
 
         // Clear history button
         document.getElementById('clear-history').addEventListener('click', () => this.handleClearHistory());
@@ -105,6 +113,25 @@ const App = {
             this.updateCountDisplay(diceType);
         }
         this.updateSelectionDisplay();
+        // Reset modifier
+        document.getElementById('modifier-input').value = '0';
+    },
+
+    /**
+     * Adjust modifier value
+     */
+    adjustModifier(delta) {
+        const input = document.getElementById('modifier-input');
+        const current = parseInt(input.value) || 0;
+        input.value = current + delta;
+    },
+
+    /**
+     * Get current modifier value
+     */
+    getModifier() {
+        const input = document.getElementById('modifier-input');
+        return parseInt(input.value) || 0;
     },
 
     /**
@@ -135,17 +162,25 @@ const App = {
 
         // Roll all dice
         const results = Dice.rollAll(this.diceConfig);
-        const total = Dice.calculateTotal(results);
+        const baseTotal = Dice.calculateTotal(results);
+        const modifier = this.getModifier();
+        const total = baseTotal + modifier;
         const diceString = Dice.formatSelection(this.diceConfig);
 
+        // Format dice string with modifier
+        let displayDice = diceString;
+        if (modifier !== 0) {
+            displayDice += modifier > 0 ? ` + ${modifier}` : ` - ${Math.abs(modifier)}`;
+        }
+
         // Display results with animation
-        await this.displayResultsAnimated(results, total);
+        await this.displayResultsAnimated(results, total, modifier, baseTotal);
 
         // Save to history
         Storage.saveRoll({
-            dice: diceString,
+            dice: displayDice,
             results: results,
-            total: total
+            total: modifier !== 0 ? `${total} (${baseTotal}${modifier > 0 ? '+' : ''}${modifier})` : total
         });
         this.loadAndDisplayHistory();
 
@@ -158,7 +193,7 @@ const App = {
     /**
      * Display roll results with animations
      */
-    async displayResultsAnimated(results, total) {
+    async displayResultsAnimated(results, total, modifier = 0, baseTotal = null) {
         const resultsSection = document.getElementById('results');
         const resultsList = document.getElementById('results-list');
         const totalEl = document.getElementById('total');
@@ -169,6 +204,7 @@ const App = {
         // Clear previous results
         resultsList.innerHTML = '';
         totalEl.textContent = '...';
+        totalEl.classList.remove('text-yellow-500', 'text-red-500');
 
         // Collect all animations
         const allAnimations = [];
@@ -206,9 +242,14 @@ const App = {
         // Wait for all animations to complete
         await Promise.all(allAnimations);
 
-        // Animate total
+        // Animate total with modifier breakdown
         totalEl.classList.add('animate-bounce-in');
-        totalEl.textContent = total;
+        if (modifier !== 0 && baseTotal !== null) {
+            const modStr = modifier > 0 ? `+${modifier}` : `${modifier}`;
+            totalEl.innerHTML = `${total} <span class="text-sm text-gray-500">(${baseTotal}${modStr})</span>`;
+        } else {
+            totalEl.textContent = total;
+        }
     },
 
     /**
@@ -235,10 +276,134 @@ const App = {
         coinResultEl.textContent = result;
         coinResultEl.classList.add('animate-bounce-in');
 
+        // Save to history
+        Storage.saveRoll({
+            dice: 'Coin Flip',
+            results: { coin: [result] },
+            total: result
+        });
+        this.loadAndDisplayHistory();
+
         // Remove animation class after completion
         setTimeout(() => {
             coinResultEl.classList.remove('animate-bounce-in');
         }, 400);
+    },
+
+    /**
+     * Handle advantage roll (2d20, take higher)
+     */
+    async handleAdvantage() {
+        if (this.isRolling) return;
+
+        this.isRolling = true;
+        const rollBtn = document.getElementById('roll-btn');
+        rollBtn.disabled = true;
+
+        // Roll 2d20
+        const roll1 = Dice.rollDie(20);
+        const roll2 = Dice.rollDie(20);
+        const higher = Math.max(roll1, roll2);
+        const lower = Math.min(roll1, roll2);
+
+        // Display results
+        await this.displayAdvantageResults(roll1, roll2, higher, 'Advantage');
+
+        // Save to history
+        Storage.saveRoll({
+            dice: 'Advantage (2d20)',
+            results: { d20: [roll1, roll2] },
+            total: `${higher} (${roll1}, ${roll2})`
+        });
+        this.loadAndDisplayHistory();
+
+        this.isRolling = false;
+        rollBtn.disabled = false;
+    },
+
+    /**
+     * Handle disadvantage roll (2d20, take lower)
+     */
+    async handleDisadvantage() {
+        if (this.isRolling) return;
+
+        this.isRolling = true;
+        const rollBtn = document.getElementById('roll-btn');
+        rollBtn.disabled = true;
+
+        // Roll 2d20
+        const roll1 = Dice.rollDie(20);
+        const roll2 = Dice.rollDie(20);
+        const higher = Math.max(roll1, roll2);
+        const lower = Math.min(roll1, roll2);
+
+        // Display results
+        await this.displayAdvantageResults(roll1, roll2, lower, 'Disadvantage');
+
+        // Save to history
+        Storage.saveRoll({
+            dice: 'Disadvantage (2d20)',
+            results: { d20: [roll1, roll2] },
+            total: `${lower} (${roll1}, ${roll2})`
+        });
+        this.loadAndDisplayHistory();
+
+        this.isRolling = false;
+        rollBtn.disabled = false;
+    },
+
+    /**
+     * Display advantage/disadvantage results with highlighting
+     */
+    async displayAdvantageResults(roll1, roll2, selectedValue, type) {
+        const resultsSection = document.getElementById('results');
+        const resultsList = document.getElementById('results-list');
+        const totalEl = document.getElementById('total');
+
+        resultsSection.classList.remove('hidden');
+        resultsList.innerHTML = '';
+
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2 flex-wrap';
+
+        const label = document.createElement('span');
+        label.className = 'text-gray-600 font-medium w-16';
+        label.textContent = `${type}:`;
+        row.appendChild(label);
+
+        // Create dice elements
+        const die1 = Animation.createDiceElement(roll1, 'd20');
+        const die2 = Animation.createDiceElement(roll2, 'd20');
+
+        row.appendChild(die1);
+        row.appendChild(die2);
+        resultsList.appendChild(row);
+
+        // Animate both dice
+        await Promise.all([
+            Animation.animateDieResult(die1, roll1, 'd20', 0),
+            Animation.animateDieResult(die2, roll2, 'd20', 50)
+        ]);
+
+        // Highlight selected value, dim the other
+        if (roll1 === selectedValue && roll1 !== roll2) {
+            die2.classList.add('opacity-40');
+        } else if (roll2 === selectedValue && roll1 !== roll2) {
+            die1.classList.add('opacity-40');
+        }
+
+        // Show total with type indicator
+        totalEl.classList.add('animate-bounce-in');
+        totalEl.textContent = selectedValue;
+
+        // Apply critical highlight to total if applicable
+        if (selectedValue === 20) {
+            totalEl.classList.add('text-yellow-500');
+        } else if (selectedValue === 1) {
+            totalEl.classList.add('text-red-500');
+        } else {
+            totalEl.classList.remove('text-yellow-500', 'text-red-500');
+        }
     },
 
     /**
