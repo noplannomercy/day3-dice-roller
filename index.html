@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Roller & Coin Flipper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Touch feedback & GPU acceleration */
+        .btn-touch {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .btn-touch:active {
+            transform: scale(0.95);
+        }
+        /* Critical highlights */
+        .critical-success {
+            background-color: #fbbf24;
+            animation: pulse 0.5s ease-in-out;
+        }
+        .critical-fail {
+            background-color: #ef4444;
+            color: white;
+            animation: pulse 0.5s ease-in-out;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div id="app" class="container mx-auto px-4 py-6 max-w-md">
+
+        <!-- Header -->
+        <header class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Dice Roller</h1>
+            <p class="text-gray-500 text-sm">Roll dice for your tabletop games</p>
+        </header>
+
+        <!-- Dice Selection Panel -->
+        <section id="dice-panel" class="bg-white rounded-lg shadow p-4 mb-4">
+            <h2 class="text-lg font-semibold text-gray-700 mb-3">Select Dice</h2>
+
+            <!-- Dice Rows -->
+            <div class="space-y-2">
+                <!-- d4 -->
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-700 font-medium w-12">d4</span>
+                    <div class="flex items-center gap-2">
+                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d4" data-action="decrease">−</button>
+                        <span class="w-8 text-center font-semibold text-lg" id="count-d4">0</span>
+                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d4" data-action="increase">+</button>
+                    </div>
+                </div>
+                <!-- d6 -->
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-700 font-medium w-12">d6</span>
+                    <div class="flex items-center gap-2">
+                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d6" data-action="decrease">−</button>
+                        <span class="w-8 text-center font-semibold text-lg" id="count-d6">0</span>
+                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d6" data-action="increase">+</button>
+                    </div>
+                </div>
+                <!-- d8 -->
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-700 font-medium w-12">d8</span>
+                    <div class="flex items-center gap-2">
+                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d8" data-action="decrease">−</button>
+                        <span class="w-8 text-center font-semibold text-lg" id="count-d8">0</span>
+                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d8" data-action="increase">+</button>
+                    </div>
+                </div>
+                <!-- d10 -->
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-700 font-medium w-12">d10</span>
+                    <div class="flex items-center gap-2">
+                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d10" data-action="decrease">−</button>
+                        <span class="w-8 text-center font-semibold text-lg" id="count-d10">0</span>
+                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d10" data-action="increase">+</button>
+                    </div>
+                </div>
+                <!-- d12 -->
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-700 font-medium w-12">d12</span>
+                    <div class="flex items-center gap-2">
+                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d12" data-action="decrease">−</button>
+                        <span class="w-8 text-center font-semibold text-lg" id="count-d12">0</span>
+                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d12" data-action="increase">+</button>
+                    </div>
+                </div>
+                <!-- d20 -->
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-700 font-medium w-12">d20</span>
+                    <div class="flex items-center gap-2">
+                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d20" data-action="decrease">−</button>
+                        <span class="w-8 text-center font-semibold text-lg" id="count-d20">0</span>
+                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d20" data-action="increase">+</button>
+                    </div>
+                </div>
+                <!-- d100 -->
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-700 font-medium w-12">d100</span>
+                    <div class="flex items-center gap-2">
+                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d100" data-action="decrease">−</button>
+                        <span class="w-8 text-center font-semibold text-lg" id="count-d100">0</span>
+                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d100" data-action="increase">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Selection -->
+            <div class="mt-4 pt-3 border-t border-gray-200">
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600 text-sm">Current:</span>
+                    <span id="current-selection" class="font-medium text-gray-800">No dice selected</span>
+                </div>
+            </div>
+
+            <!-- Clear All Button -->
+            <button id="clear-all" class="btn-touch w-full mt-3 h-11 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg font-medium transition-all">
+                Clear All
+            </button>
+        </section>
+
+        <!-- Roll Button -->
+        <section id="roll-section" class="mb-4">
+            <button id="roll-btn" class="btn-touch w-full h-14 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xl font-bold rounded-lg shadow-lg transition-all">
+                Roll Dice
+            </button>
+        </section>
+
+        <!-- Results Display -->
+        <section id="results" class="bg-white rounded-lg shadow p-4 mb-4 hidden">
+            <h2 class="text-lg font-semibold text-gray-700 mb-3">Results</h2>
+            <div id="results-list" class="space-y-2 max-h-48 overflow-y-auto">
+                <!-- Results will be inserted here -->
+            </div>
+            <div class="mt-3 pt-3 border-t border-gray-200">
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600 font-medium">Total:</span>
+                    <span id="total" class="text-2xl font-bold text-indigo-600">0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Coin Flip -->
+        <section id="coin-flip" class="bg-white rounded-lg shadow p-4 mb-4">
+            <h2 class="text-lg font-semibold text-gray-700 mb-3">Coin Flip</h2>
+            <div class="flex items-center gap-4">
+                <button id="flip-coin-btn" class="btn-touch flex-1 h-11 bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-white font-bold rounded-lg transition-all">
+                    Flip Coin
+                </button>
+                <div id="coin-result" class="flex-1 text-center text-lg font-semibold text-gray-700">
+                    —
+                </div>
+            </div>
+        </section>
+
+        <!-- History -->
+        <section id="history" class="bg-white rounded-lg shadow p-4 mb-4">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-lg font-semibold text-gray-700">History</h2>
+                <button id="clear-history" class="btn-touch px-3 h-9 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm rounded-lg transition-all">
+                    Clear
+                </button>
+            </div>
+            <div id="history-list" class="space-y-2 max-h-40 overflow-y-auto text-sm">
+                <p class="text-gray-400 italic">No rolls yet</p>
+            </div>
+        </section>
+
+        <!-- Quick Presets -->
+        <section id="presets" class="bg-white rounded-lg shadow p-4">
+            <h2 class="text-lg font-semibold text-gray-700 mb-3">Quick Presets</h2>
+            <div class="flex flex-wrap gap-2">
+                <button class="btn-touch preset-btn px-4 h-11 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-medium rounded-lg transition-all" data-preset="1d20">
+                    1d20
+                </button>
+                <button class="btn-touch preset-btn px-4 h-11 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-medium rounded-lg transition-all" data-preset="2d6">
+                    2d6
+                </button>
+                <button class="btn-touch preset-btn px-4 h-11 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-medium rounded-lg transition-all" data-preset="4d6kh3">
+                    4d6 drop low
+                </button>
+                <button class="btn-touch preset-btn px-4 h-11 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-medium rounded-lg transition-all" data-preset="1d100">
+                    1d100
+                </button>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- JS Modules -->
+    <script src="js/storage.js"></script>
+    <script src="js/dice.js"></script>
+    <script src="js/animation.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
