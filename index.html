@@ -1,11 +1,95 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dice Roller & Coin Flipper</title>
+    <title>Arcane Roller - Digital Dice Roller</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f2cc0d",
+                        "background-dark": "#221f10",
+                        "background-light": "#f8f8f5",
+                        "bronze-dark": "#8b5e3c",
+                        "bronze-light": "#b8860b",
+                        "parchment": "#f4e4bc",
+                        "leather-brown": "#5d4037",
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"]
+                    },
+                },
+            },
+        }
+    </script>
     <style>
+        body {
+            font-family: "Newsreader", serif;
+        }
+
+        /* Textures */
+        .leather-texture {
+            background-color: #221f10;
+            background-image:
+                radial-gradient(#494222 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .parchment-texture {
+            background-color: #f4e4bc;
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Gold glow effect */
+        .gold-glow {
+            text-shadow: 0 0 15px rgba(242, 204, 13, 0.6);
+        }
+
+        /* Bronze relief button */
+        .bronze-relief {
+            background: linear-gradient(to bottom, #b8860b, #8b5e3c);
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.2), 0 4px 10px rgba(0, 0, 0, 0.5);
+            border: 2px solid #8b5e3c;
+        }
+
+        .bronze-relief:hover {
+            background: linear-gradient(to bottom, #c9970c, #9a6b45);
+        }
+
+        /* Override dice-result element styling (created by JS) */
+        .dice-result {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 9999px !important;
+            color: #f2cc0d !important;
+            width: 3rem !important;
+            height: 3rem !important;
+            font-size: 1.125rem !important;
+        }
+
+        /* Result list row label styling */
+        #results-list .text-gray-600 {
+            color: rgba(242, 204, 13, 0.7) !important;
+        }
+
+        /* Total text color overrides */
+        #total.text-yellow-500 {
+            color: #f2cc0d !important;
+        }
+        #total.text-red-500 {
+            color: #dc2626 !important;
+        }
+
+        /* History message styling */
+        #history-list .text-gray-500 {
+            color: rgba(93, 64, 55, 0.6) !important;
+        }
         /* Touch feedback & GPU acceleration */
         .btn-touch {
             -webkit-tap-highlight-color: transparent;
@@ -56,25 +140,39 @@
 
         /* Critical highlights with pulse */
         .critical-success {
-            background-color: #fbbf24 !important;
-            color: #78350f !important;
+            background-color: #f2cc0d !important;
+            color: #221f10 !important;
             animation: pulse-gold 0.6s ease-in-out;
-            box-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
+            box-shadow: 0 0 15px rgba(242, 204, 13, 0.8);
+            font-weight: 900;
         }
         .critical-fail {
-            background-color: #ef4444 !important;
+            background-color: #dc2626 !important;
             color: white !important;
             animation: pulse-red 0.6s ease-in-out;
-            box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+            box-shadow: 0 0 15px rgba(220, 38, 38, 0.8);
+            font-weight: 900;
         }
 
         @keyframes pulse-gold {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 12px rgba(251, 191, 36, 0.6); }
-            50% { transform: scale(1.15); box-shadow: 0 0 20px rgba(251, 191, 36, 0.9); }
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 15px rgba(242, 204, 13, 0.8);
+            }
+            50% {
+                transform: scale(1.15);
+                box-shadow: 0 0 25px rgba(242, 204, 13, 1);
+            }
         }
         @keyframes pulse-red {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 12px rgba(239, 68, 68, 0.6); }
-            50% { transform: scale(1.15); box-shadow: 0 0 20px rgba(239, 68, 68, 0.9); }
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 15px rgba(220, 38, 38, 0.8);
+            }
+            50% {
+                transform: scale(1.15);
+                box-shadow: 0 0 25px rgba(220, 38, 38, 1);
+            }
         }
 
         /* Coin flip animation */
@@ -87,186 +185,242 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <div id="app" class="container mx-auto px-4 py-6 max-w-md">
+<body class="leather-texture text-white min-h-screen">
+    <div id="app" class="container mx-auto px-4 py-8 max-w-4xl">
 
         <!-- Header -->
-        <header class="text-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">Dice Roller</h1>
-            <p class="text-gray-500 text-sm">Roll dice for your tabletop games</p>
+        <header class="text-center mb-8">
+            <div class="flex items-center justify-center gap-3 mb-2">
+                <span class="material-symbols-outlined text-primary text-4xl">casino</span>
+                <h1 class="text-4xl font-bold italic font-display tracking-tight gold-glow">Arcane Roller</h1>
+            </div>
+            <p class="text-primary/70 italic text-lg">Invoke the spirits of chance...</p>
         </header>
 
         <!-- Dice Selection Panel -->
-        <section id="dice-panel" class="bg-white rounded-lg shadow p-4 mb-4">
-            <h2 class="text-lg font-semibold text-gray-700 mb-3">Select Dice</h2>
+        <section id="dice-panel" class="bg-black/30 rounded-xl border border-white/10 backdrop-blur-sm p-6 mb-6">
+            <h2 class="text-xl font-bold text-primary mb-4 font-display italic">Select Your Dice</h2>
 
-            <!-- Dice Rows -->
-            <div class="space-y-2">
+            <!-- Dice Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                 <!-- d4 -->
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-700 font-medium w-12">d4</span>
+                <div class="bg-white/5 rounded-lg p-3 border border-white/10">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="material-symbols-outlined text-primary text-2xl">change_history</span>
+                        <span class="text-white font-bold">d4</span>
+                    </div>
                     <div class="flex items-center gap-2">
-                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d4" data-action="decrease">−</button>
-                        <span class="w-8 text-center font-semibold text-lg" id="count-d4">0</span>
-                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d4" data-action="increase">+</button>
+                        <button class="btn-touch w-8 h-8 bg-white/10 hover:bg-white/20 rounded text-primary font-bold transition-all" data-dice="d4" data-action="decrease">−</button>
+                        <span class="flex-1 text-center font-bold text-lg text-primary" id="count-d4">0</span>
+                        <button class="btn-touch w-8 h-8 bg-white/10 hover:bg-white/20 rounded text-primary font-bold transition-all" data-dice="d4" data-action="increase">+</button>
                     </div>
                 </div>
                 <!-- d6 -->
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-700 font-medium w-12">d6</span>
+                <div class="bg-white/5 rounded-lg p-3 border border-white/10">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="material-symbols-outlined text-primary text-2xl">square</span>
+                        <span class="text-white font-bold">d6</span>
+                    </div>
                     <div class="flex items-center gap-2">
-                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d6" data-action="decrease">−</button>
-                        <span class="w-8 text-center font-semibold text-lg" id="count-d6">0</span>
-                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d6" data-action="increase">+</button>
+                        <button class="btn-touch w-8 h-8 bg-white/10 hover:bg-white/20 rounded text-primary font-bold transition-all" data-dice="d6" data-action="decrease">−</button>
+                        <span class="flex-1 text-center font-bold text-lg text-primary" id="count-d6">0</span>
+                        <button class="btn-touch w-8 h-8 bg-white/10 hover:bg-white/20 rounded text-primary font-bold transition-all" data-dice="d6" data-action="increase">+</button>
                     </div>
                 </div>
                 <!-- d8 -->
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-700 font-medium w-12">d8</span>
+                <div class="bg-white/5 rounded-lg p-3 border border-white/10">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">pentagon</span>
+                        <span class="text-white font-bold">d8</span>
+                    </div>
                     <div class="flex items-center gap-2">
-                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d8" data-action="decrease">−</button>
-                        <span class="w-8 text-center font-semibold text-lg" id="count-d8">0</span>
-                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d8" data-action="increase">+</button>
+                        <button class="btn-touch w-8 h-8 bg-white/10 hover:bg-white/20 rounded text-primary font-bold transition-all" data-dice="d8" data-action="decrease">−</button>
+                        <span class="flex-1 text-center font-bold text-lg text-primary" id="count-d8">0</span>
+                        <button class="btn-touch w-8 h-8 bg-white/10 hover:bg-white/20 rounded text-primary font-bold transition-all" data-dice="d8" data-action="increase">+</button>
                     </div>
                 </div>
                 <!-- d10 -->
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-700 font-medium w-12">d10</span>
+                <div class="bg-white/5 rounded-lg p-3 border border-white/10">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="material-symbols-outlined text-primary text-2xl">diamond</span>
+                        <span class="text-white font-bold">d10</span>
+                    </div>
                     <div class="flex items-center gap-2">
-                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d10" data-action="decrease">−</button>
-                        <span class="w-8 text-center font-semibold text-lg" id="count-d10">0</span>
-                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d10" data-action="increase">+</button>
+                        <button class="btn-touch w-8 h-8 bg-white/10 hover:bg-white/20 rounded text-primary font-bold transition-all" data-dice="d10" data-action="decrease">−</button>
+                        <span class="flex-1 text-center font-bold text-lg text-primary" id="count-d10">0</span>
+                        <button class="btn-touch w-8 h-8 bg-white/10 hover:bg-white/20 rounded text-primary font-bold transition-all" data-dice="d10" data-action="increase">+</button>
                     </div>
                 </div>
                 <!-- d12 -->
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-700 font-medium w-12">d12</span>
+                <div class="bg-white/5 rounded-lg p-3 border border-white/10">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">hexagon</span>
+                        <span class="text-white font-bold">d12</span>
+                    </div>
                     <div class="flex items-center gap-2">
-                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d12" data-action="decrease">−</button>
-                        <span class="w-8 text-center font-semibold text-lg" id="count-d12">0</span>
-                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d12" data-action="increase">+</button>
+                        <button class="btn-touch w-8 h-8 bg-white/10 hover:bg-white/20 rounded text-primary font-bold transition-all" data-dice="d12" data-action="decrease">−</button>
+                        <span class="flex-1 text-center font-bold text-lg text-primary" id="count-d12">0</span>
+                        <button class="btn-touch w-8 h-8 bg-white/10 hover:bg-white/20 rounded text-primary font-bold transition-all" data-dice="d12" data-action="increase">+</button>
                     </div>
                 </div>
                 <!-- d20 -->
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-700 font-medium w-12">d20</span>
+                <div class="bg-white/5 rounded-lg p-3 border border-white/10">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="material-symbols-outlined text-primary text-2xl">interests</span>
+                        <span class="text-white font-bold">d20</span>
+                    </div>
                     <div class="flex items-center gap-2">
-                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d20" data-action="decrease">−</button>
-                        <span class="w-8 text-center font-semibold text-lg" id="count-d20">0</span>
-                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d20" data-action="increase">+</button>
+                        <button class="btn-touch w-8 h-8 bg-white/10 hover:bg-white/20 rounded text-primary font-bold transition-all" data-dice="d20" data-action="decrease">−</button>
+                        <span class="flex-1 text-center font-bold text-lg text-primary" id="count-d20">0</span>
+                        <button class="btn-touch w-8 h-8 bg-white/10 hover:bg-white/20 rounded text-primary font-bold transition-all" data-dice="d20" data-action="increase">+</button>
                     </div>
                 </div>
                 <!-- d100 -->
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-700 font-medium w-12">d100</span>
+                <div class="bg-white/5 rounded-lg p-3 border border-white/10">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="material-symbols-outlined text-primary text-2xl">percent</span>
+                        <span class="text-white font-bold">d100</span>
+                    </div>
                     <div class="flex items-center gap-2">
-                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d100" data-action="decrease">−</button>
-                        <span class="w-8 text-center font-semibold text-lg" id="count-d100">0</span>
-                        <button class="btn-touch w-11 h-11 bg-gray-200 hover:bg-gray-300 rounded-lg text-xl font-bold transition-all" data-dice="d100" data-action="increase">+</button>
+                        <button class="btn-touch w-8 h-8 bg-white/10 hover:bg-white/20 rounded text-primary font-bold transition-all" data-dice="d100" data-action="decrease">−</button>
+                        <span class="flex-1 text-center font-bold text-lg text-primary" id="count-d100">0</span>
+                        <button class="btn-touch w-8 h-8 bg-white/10 hover:bg-white/20 rounded text-primary font-bold transition-all" data-dice="d100" data-action="increase">+</button>
                     </div>
                 </div>
             </div>
 
             <!-- Current Selection -->
-            <div class="mt-4 pt-3 border-t border-gray-200">
+            <div class="pt-4 border-t border-white/10">
                 <div class="flex items-center justify-between">
-                    <span class="text-gray-600 text-sm">Current:</span>
-                    <span id="current-selection" class="font-medium text-gray-800">No dice selected</span>
+                    <span class="text-white/60 text-sm font-medium uppercase tracking-wider">Current:</span>
+                    <span id="current-selection" class="font-bold text-primary">No dice selected</span>
                 </div>
             </div>
 
             <!-- Modifier Input -->
-            <div class="mt-4 pt-3 border-t border-gray-200">
+            <div class="mt-4 pt-4 border-t border-white/10">
                 <div class="flex items-center justify-between">
-                    <span class="text-gray-600 text-sm">Modifier:</span>
+                    <span class="text-white/60 text-sm font-medium uppercase tracking-wider">Modifier:</span>
                     <div class="flex items-center gap-2">
-                        <button class="btn-touch w-9 h-9 bg-gray-200 hover:bg-gray-300 rounded-lg text-lg font-bold transition-all" id="mod-decrease">−</button>
-                        <input type="number" id="modifier-input" value="0" class="w-14 h-9 text-center border border-gray-300 rounded-lg font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button class="btn-touch w-9 h-9 bg-gray-200 hover:bg-gray-300 rounded-lg text-lg font-bold transition-all" id="mod-increase">+</button>
+                        <button class="btn-touch w-10 h-10 bg-white/10 hover:bg-white/20 rounded-lg text-lg font-bold text-primary transition-all" id="mod-decrease">−</button>
+                        <input type="number" id="modifier-input" value="0" class="w-16 h-10 text-center bg-black/30 border border-white/20 rounded-lg font-bold text-primary focus:outline-none focus:ring-2 focus:ring-primary/50">
+                        <button class="btn-touch w-10 h-10 bg-white/10 hover:bg-white/20 rounded-lg text-lg font-bold text-primary transition-all" id="mod-increase">+</button>
                     </div>
                 </div>
             </div>
 
             <!-- Clear All Button -->
-            <button id="clear-all" class="btn-touch w-full mt-3 h-11 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg font-medium transition-all">
+            <button id="clear-all" class="btn-touch w-full mt-4 h-11 bg-white/5 hover:bg-white/10 text-white/80 border border-white/10 rounded-lg font-medium transition-all">
                 Clear All
             </button>
         </section>
 
         <!-- Roll Button -->
-        <section id="roll-section" class="mb-4">
-            <button id="roll-btn" class="btn-touch w-full h-14 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xl font-bold rounded-lg shadow-lg transition-all">
-                Roll Dice
+        <section id="roll-section" class="mb-6">
+            <button id="roll-btn" class="btn-touch w-full h-16 bronze-relief text-white text-2xl font-black uppercase tracking-wider rounded-xl shadow-2xl transition-all hover:scale-[1.02]">
+                <div class="flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-3xl">casino</span>
+                    <span>Roll Dice</span>
+                </div>
             </button>
             <!-- Advantage/Disadvantage -->
-            <div class="flex gap-2 mt-2">
-                <button id="advantage-btn" class="btn-touch flex-1 h-11 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold rounded-lg transition-all">
-                    Advantage
+            <div class="flex gap-3 mt-3">
+                <button id="advantage-btn" class="btn-touch flex-1 h-12 bg-green-700 hover:bg-green-600 border-2 border-green-500/50 text-white font-bold rounded-lg transition-all shadow-lg">
+                    <div class="flex items-center justify-center gap-1">
+                        <span class="material-symbols-outlined text-xl">trending_up</span>
+                        <span>Advantage</span>
+                    </div>
                 </button>
-                <button id="disadvantage-btn" class="btn-touch flex-1 h-11 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold rounded-lg transition-all">
-                    Disadvantage
+                <button id="disadvantage-btn" class="btn-touch flex-1 h-12 bg-red-700 hover:bg-red-600 border-2 border-red-500/50 text-white font-bold rounded-lg transition-all shadow-lg">
+                    <div class="flex items-center justify-center gap-1">
+                        <span class="material-symbols-outlined text-xl">trending_down</span>
+                        <span>Disadvantage</span>
+                    </div>
                 </button>
             </div>
         </section>
 
         <!-- Results Display -->
-        <section id="results" class="bg-white rounded-lg shadow p-4 mb-4 hidden">
-            <h2 class="text-lg font-semibold text-gray-700 mb-3">Results</h2>
-            <div id="results-list" class="space-y-2 max-h-48 overflow-y-auto">
-                <!-- Results will be inserted here -->
+        <section id="results" class="bg-black/40 rounded-3xl border-4 border-double border-primary/20 p-8 mb-6 relative overflow-hidden hidden">
+            <!-- Background Decorative Element -->
+            <div class="absolute inset-0 opacity-5 pointer-events-none flex items-center justify-center">
+                <span class="material-symbols-outlined text-[200px]">auto_awesome</span>
             </div>
-            <div class="mt-3 pt-3 border-t border-gray-200">
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-600 font-medium">Total:</span>
-                    <span id="total" class="text-2xl font-bold text-indigo-600">0</span>
+
+            <div class="relative z-10">
+                <h2 class="text-center text-primary/70 text-xs font-bold uppercase tracking-widest mb-4">Results</h2>
+
+                <!-- Individual Dice Results -->
+                <div id="results-list" class="flex flex-wrap justify-center gap-2 mb-6 max-h-32 overflow-y-auto">
+                    <!-- Results will be inserted here -->
+                </div>
+
+                <!-- Total Display -->
+                <div class="text-center">
+                    <p class="text-primary/50 text-xs font-bold uppercase tracking-widest mb-2">Total</p>
+                    <span id="total" class="text-7xl md:text-8xl font-extrabold font-display italic text-white gold-glow leading-none">0</span>
                 </div>
             </div>
         </section>
 
         <!-- Coin Flip -->
-        <section id="coin-flip" class="bg-white rounded-lg shadow p-4 mb-4">
-            <h2 class="text-lg font-semibold text-gray-700 mb-3">Coin Flip</h2>
+        <section id="coin-flip" class="bg-black/30 rounded-xl border border-white/10 backdrop-blur-sm p-6 mb-6">
+            <h2 class="text-xl font-bold text-primary mb-4 font-display italic flex items-center gap-2">
+                <span class="material-symbols-outlined">toll</span>
+                Coin Flip
+            </h2>
             <div class="flex items-center gap-4">
-                <button id="flip-coin-btn" class="btn-touch flex-1 h-11 bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-white font-bold rounded-lg transition-all">
+                <button id="flip-coin-btn" class="btn-touch flex-1 h-12 bg-gradient-to-b from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 border-2 border-yellow-400/50 text-white font-bold rounded-lg transition-all shadow-lg">
                     Flip Coin
                 </button>
-                <div id="coin-result" class="flex-1 text-center text-lg font-semibold text-gray-700">
+                <div id="coin-result" class="flex-1 text-center text-2xl font-bold text-primary">
                     —
                 </div>
             </div>
         </section>
 
         <!-- History -->
-        <section id="history" class="bg-white rounded-lg shadow p-4 mb-4">
-            <div class="flex items-center justify-between mb-3">
-                <h2 class="text-lg font-semibold text-gray-700">History</h2>
-                <button id="clear-history" class="btn-touch px-3 h-9 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm rounded-lg transition-all">
-                    Clear
+        <section id="history" class="parchment-texture rounded-lg shadow-2xl p-0 overflow-hidden border-8 border-double border-bronze-dark/30 mb-6">
+            <div class="px-6 py-4 border-b border-bronze-dark/20 flex items-center justify-between bg-black/5">
+                <h2 class="text-leather-brown font-bold uppercase tracking-widest flex items-center gap-2">
+                    <span class="material-symbols-outlined text-xl">history_edu</span>
+                    Roll History
+                </h2>
+                <button id="clear-history" class="btn-touch px-4 h-9 bg-bronze-dark/20 hover:bg-bronze-dark/30 text-leather-brown text-xs font-bold rounded transition-all">
+                    Clear Records
                 </button>
             </div>
-            <div id="history-list" class="space-y-2 max-h-40 overflow-y-auto text-sm">
-                <p class="text-gray-400 italic">No rolls yet</p>
+            <div id="history-list" class="divide-y divide-bronze-dark/10 max-h-64 overflow-y-auto p-4">
+                <p class="text-leather-brown/50 italic text-sm">No rolls yet</p>
             </div>
         </section>
 
         <!-- Quick Presets -->
-        <section id="presets" class="bg-white rounded-lg shadow p-4">
-            <h2 class="text-lg font-semibold text-gray-700 mb-3">Quick Presets</h2>
-            <div class="flex flex-wrap gap-2">
-                <button class="btn-touch preset-btn px-4 h-11 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-medium rounded-lg transition-all" data-preset="1d20">
+        <section id="presets" class="bg-black/30 rounded-xl border border-white/10 backdrop-blur-sm p-6">
+            <h2 class="text-xl font-bold text-primary mb-4 font-display italic flex items-center gap-2">
+                <span class="material-symbols-outlined">bolt</span>
+                Quick Presets
+            </h2>
+            <div class="flex flex-wrap gap-3">
+                <button class="btn-touch preset-btn px-5 h-12 bg-primary/10 hover:bg-primary/20 border-2 border-primary/30 text-primary font-bold rounded-lg transition-all" data-preset="1d20">
                     1d20
                 </button>
-                <button class="btn-touch preset-btn px-4 h-11 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-medium rounded-lg transition-all" data-preset="2d6">
+                <button class="btn-touch preset-btn px-5 h-12 bg-primary/10 hover:bg-primary/20 border-2 border-primary/30 text-primary font-bold rounded-lg transition-all" data-preset="2d6">
                     2d6
                 </button>
-                <button class="btn-touch preset-btn px-4 h-11 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-medium rounded-lg transition-all" data-preset="4d6kh3">
+                <button class="btn-touch preset-btn px-5 h-12 bg-primary/10 hover:bg-primary/20 border-2 border-primary/30 text-primary font-bold rounded-lg transition-all" data-preset="4d6kh3">
                     4d6 drop low
                 </button>
-                <button class="btn-touch preset-btn px-4 h-11 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-medium rounded-lg transition-all" data-preset="1d100">
+                <button class="btn-touch preset-btn px-5 h-12 bg-primary/10 hover:bg-primary/20 border-2 border-primary/30 text-primary font-bold rounded-lg transition-all" data-preset="1d100">
                     1d100
                 </button>
             </div>
         </section>
+
+        <!-- Footer -->
+        <footer class="mt-8 text-center text-white/30 text-xs uppercase tracking-widest font-bold">
+            Handcrafted for Epic Adventures
+        </footer>
 
     </div>
 
